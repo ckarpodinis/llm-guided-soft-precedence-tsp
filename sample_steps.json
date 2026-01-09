@@ -1,0 +1,31 @@
+{
+  "steps": [
+    { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.0", "name": "aluminium foil #0" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } },
+    { "action": "transfer", "target": { "type": "chemical", "id": "chemical.cuso4", "name": "copper(II) sulfate pentahydrate" }, "amount": 5, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.0", "name": "spoon #0" }, "from": { "type": "container", "id": "container.cuso4", "name": "copper(II) sulfate pentahydrate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.0", "name": "aluminium foil #0" } },
+    { "action": "transfer", "target": "aluminium foil #0 (with copper(II) sulfate pentahydrate)", "from": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" }, "to": "bench" },
+    { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.1", "name": "aluminium foil #1" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } },
+    { "action": "close", "target": { "type": "container", "id": "container.cuso4" }, "component": "cap" },
+    { "action": "transfer", "target": { "type": "chemical", "id": "chemical.nahco3", "name": "sodium bicarbonate" }, "amount": 3.4, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.1", "name": "spoon #1" }, "from": { "type": "container", "id": "container.nahco3", "name": "sodium bicarbonate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.1", "name": "aluminium foil #1" } },
+    { "action": "transfer", "target": "aluminium foil #1 (with sodium bicarbonate)", "from": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" }, "to": "bench" },
+    { "action": "transfer", "target": "Erlenmeyer flask #0", "from": null, "to": "bench" },
+    { "action": "transfer", "target": "aluminium foil #0[copper(II) sulfate pentahydrate]", "from": "bench", "to": "Erlenmeyer flask #0" },
+    { "action": "transfer", "target": "aluminium foil #1[sodium bicarbonate]", "from": "bench", "to": "Erlenmeyer flask #0" },
+    { "action": "open", "target": { "type": "container", "id": "container.ddh2o" }, "component": "cap" },
+    { "action": "transfer", "target": { "type": "chemical", "id": "chemical.ddh2o", "name": "double-distilled water" }, "amount": 100, "unit": "mL", "from": { "type": "container", "id": "container.ddh2o", "name": "double-distilled water" }, "to": { "type": "tool", "id": "tool.erlenmeyer_flask.0", "name": "Erlenmeyer flask #0" } },
+    { "action": "transfer", "target": "Erlenmeyer flask #0", "from": "bench", "to": "stirring platform of magnetic stirrer" },
+    { "action": "transfer", "target": "magnetic stir bar", "from": "bench", "to": "Erlenmeyer flask #0" },
+    { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "power", "value": "on" },
+    { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "RPM", "value": 5, "unit": "RPM" },
+    { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "power", "value": "off", "details": "after reaction is complete" },
+    { "action": "transfer", "target": "magnetic stir bar", "using": { "type": "tool", "id": "tool.magnetic_stick", "name": "magnetic stick" }, "from": "Erlenmeyer flask #0", "to": "bench" },
+    { "action": "transfer", "target": "magnetic stick", "from": null, "to": "bench" },
+    { "action": "transfer", "target": "aluminium foil #0", "from": "bench", "to": "waste bin" },
+    { "action": "transfer", "target": "aluminium foil #1", "from": "bench", "to": "waste bin" },
+    { "action": "close", "target": { "type": "container", "id": "container.ddh2o" }, "component": "cap" },
+    { "action": "set", "target": { "type": "instrument", "id": "instrument.electronic_scale" }, "property": "power", "value": "on" },
+    { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.2", "name": "aluminium foil #2" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } },
+    { "action": "transfer", "target": { "type": "chemical", "id": "chemical.cuso4", "name": "copper(II) sulfate pentahydrate" }, "amount": 5, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.0", "name": "spoon #0" }, "from": { "type": "container", "id": "container.cuso4", "name": "copper(II) sulfate pentahydrate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.2", "name": "aluminium foil #2" } },
+    { "action": "set", "target": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale" }, "property": "power", "value": "off" }
+  ]
+}
+

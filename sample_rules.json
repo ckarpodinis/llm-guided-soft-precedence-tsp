@@ -1,0 +1,44 @@
+{
+  "rules": [
+    {
+      "id": 1,
+      "description": "Open/close the same container before/after transferring from it; a close/open of that same container resets it.",
+      "trigger": {
+        "match": {
+          "all": [
+            { "path": "action", "equals": "transfer" },
+            { "path": "from.type", "equals": "container" },
+            { "path": "from.id", "exists": true },
+            { "path": "from.id", "equals": "$container_id" }
+          ]
+        }
+      },
+
+      "requires": [
+          { "action": "open", "target": { "type": "container", "id": "$container_id" }, "component": "cap" }
+      ],
+
+      "follows": [
+          { "action": "close", "target": { "type": "container", "id": "$container_id" }, "component": "cap" }
+      ]
+    },
+    {
+      "id": 2,
+      "description": "The electronic scale must be powered on before placing any aluminium foil on its platform",
+      "trigger": {
+        "match": {
+          "all": [
+            { "path": "action", "equals": "transfer" },
+            { "path": "target.id", "matches": { "glob": "consumable.aluminium_foil.*" } },
+            { "path": "to.id", "equals": "$scale_id" },
+            { "path": "to.id", "equals": "instrument.electronic_scale" }
+          ]
+        }
+      },
+
+      "requires": [
+        { "action": "set", "target": { "type": "instrument", "id": "$scale_id" }, "property": "power", "value": "on" }
+      ]
+    }
+  ]
+}
