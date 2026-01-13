@@ -3,6 +3,135 @@ from gurobipy import GRB
 import json
 import math
 
+def short(x):
+    if isinstance(x, str):
+        return x[:6]
+    return str(x)
+
+def debug_soft_constraints(u, s_cluster, s_raw, pos0):
+    print("\n[DEBUG] Soft constraint violations summary\n")
+
+    def print_block(title, slack_dict):
+        print(f"\n--- {title} ---")
+
+        any_printed = False
+        for (i, j), var in slack_dict.items():
+            start = var.start if var.start is not None else 0.0
+            final = var.X
+
+            if start > 1e-6 or final > 1e-6:
+                any_printed = True
+                print(
+                    f"  {short(i)} → {short(j)} | "
+                    f"start={start:.2f} → final={final:.2f}"
+                )
+
+        if not any_printed:
+            print("  ✔ none violated")
+
+    print_block("CLUSTER ORDER constraints", s_cluster)
+    print_block("FREE / LOGICAL constraints", s_raw)
+
+def compare_slack_start_vs_final(s_cluster=None, s_raw=None):
+    def check(title, sdict):
+        if not sdict:
+            return
+        print(f"\n-- {title} --")
+        for (i, j), var in sdict.items():
+            start = var.Start
+            final = var.X
+            if abs(final - start) > 1e-6:
+                print(
+                    f"  {short(i)} → {short(j)} : "
+                    f"start={start:.2f} → final={final:.2f}"
+                )
+
+    check("CLUSTER slacks", s_cluster)
+    check("RAW slacks", s_raw)
+
+def debug_objective_components(m, travel_cost, soft_penalty,
+                               cluster_penalty, raw_penalty):
+    print("\n[DEBUG] Objective decomposition")
+
+    print(f"  Travel cost        : {travel_cost.getValue():.2f}")
+    print(f"  Deviation penalty  : {soft_penalty.getValue():.2f}")
+    print(f"  Cluster penalty    : {cluster_penalty.getValue():.2f}")
+    print(f"  Raw penaltly       : {raw_penalty.getValue():.2f}")
+    print(f"  TOTAL              : {m.ObjVal:.2f}")
+
+def local_relative_displacement(i, pos0, u, k=2):
+    """
+    Counts how many local neighbor orderings of i were inverted.
+    k = window size on each side
+    """
+    p0 = pos0[i]
+    ui = u[i].X
+
+    # initial neighbors
+    neighbors = [
+        j for j in pos0
+        if j != i and abs(pos0[j] - p0) <= k
+    ]
+
+    inv = 0
+    for j in neighbors:
+        if (p0 - pos0[j]) * (ui - u[j].X) < 0:
+            inv += 1
+
+    return inv
+
+def ascii_shift_plot(u, pos0, clusters=None, width=80, k=2):
+    print("\n[DEBUG] Warm start → final ordering\n")
+    
+    # map node -> cluster id (optional)
+    cluster_of = {}
+    if clusters:
+        for k, C in clusters.items():
+            for i in C:
+                cluster_of[i] = k
+
+    N = len(pos0)
+    scale = width / N
+
+    # ranks
+    final_rank = {
+        i: rank for rank, i in enumerate(
+            sorted(pos0, key=lambda x: u[x].X)
+        )
+    }
+    initial_rank = {
+        i: rank for rank, i in enumerate(
+            sorted(pos0, key=lambda x: pos0[x])
+        )
+    }
+
+    for i in sorted(pos0, key=lambda x: pos0[x]):
+        p0 = pos0[i]
+        p1 = u[i].X
+
+        Δ = int(p1 - p0)
+        Δrel = final_rank[i] - initial_rank[i]
+        Δloc = local_relative_displacement(i, pos0, u, k=k)
+
+        x0 = int(p0 * scale)
+        x1 = int(p1 * scale)
+
+        line = [" "] * (width + 1)
+        line[x0] = "|"
+        line[x1] = "*"
+
+        for t in range(min(x0, x1) + 1, max(x0, x1)):
+            line[t] = "-"
+
+        ctag = f"[C{cluster_of[i]}]" if cluster_of and i in cluster_of else ""
+
+        print(
+            f"{short(i):6} {ctag:4}  "
+            f"{''.join(line)}  "
+            #f"Δ={Δ:+3d}  Δrel={Δrel:+3d}  Δloc={Δloc}"
+            f"Δ={Δ:+3d}  Δloc={Δloc}"
+        )
+
 
 def print_route_table(route, unified_steps_path="unified_steps.json"):
     import pandas as pd
@@ -38,10 +167,10 @@ def print_route_table(route, unified_steps_path="unified_steps.json"):
 
     rows = []
     for i, uid in enumerate(route):
-        rows.append((i, uid, describe(uuid_to_step.get(uid))))
+        rows.append((i, short(uid), describe(uuid_to_step.get(uid))))
 
     # console formatting
-    U_W, UUID_W = 3, 36
+    U_W, UUID_W = 3, 8
     print(f"{'u':<{U_W}}  {'uuid':<{UUID_W}}  description")
     print("-" * (U_W + UUID_W + 60))
     for u, uid, desc in rows:
@@ -63,8 +192,6 @@ try:
 except FileNotFoundError:
     raw_constraints = []
     
-raw_constraints = []
-
 # Create UUID nodes
 nodes = [entry["uuid"] for entry in steps]
 depot = "DEPOT"
@@ -83,7 +210,8 @@ C2 = {
     '664a99ff-45a1-9a9c-ff3b-c7f0c13030ce', 'b0352a80-f285-0aba-ee44-28d6c310c07e',
     'd97be2dc-a572-0268-39d8-93c54e63ce19', '127cffe5-4c5a-3ffd-ca92-3eb03c902a5d'
 }
-C3 = {'cf4a006c-3ffd-a552-f62e-dafbd48d296b', '95b51243-9aa9-1fbc-ef22-813467386422', '47b449ab-b02a-81f0-217e-a3054497199c'}
+C3 = {'cf4a006c-3ffd-a552-f62e-dafbd48d296b', '95b51243-9aa9-1fbc-ef22-813467386422', 
+      '47b449ab-b02a-81f0-217e-a3054497199c'}
 
 # Cluster order: C3 -> C1 -> C2
 cluster_order = {1: C3, 2: C1, 3: C2}
@@ -109,7 +237,6 @@ pos0 = {node: idx for idx, node in enumerate(initial_tour) if node in N}
 # COST MATRIX (uniform for now)
 # -------------------------------------------------
 c = {(i,j): 1 for i in V for j in V if i != j}
-
 
 # -------------------------------------------------
 # MODEL
@@ -146,11 +273,15 @@ for i in N:
         m.addConstr(u[i] - u[j] + M * x[i, j] <= M - 1, name=f"mtz_{i}_{j}")
 
 # Optional hard precedence constraints (from uuid_constraints.json)
-for (a, b) in hard_precedence:
-    if a in u and b in u:
-        m.addConstr(u[a] + 1 <= u[b], name=f"prec_{a}_{b}")
+s_raw = {}
+for (i, j) in hard_precedence:
+    if i in u and j in u:
+        s_raw[i, j] = m.addVar(lb=0.0, vtype=GRB.CONTINUOUS, 
+                                name=f"s_raw_{i}_{j}")
+        m.addConstr(u[i] + 1 <= u[j] + s_raw[i, j], 
+                    name=f"raw_order_{i}_{j}")
 
-# Position deviation linearization
+# Position deviation linearization: d[i] >= abs(u[i] - pos0[i])
 for i in N:
     m.addConstr(d[i] >= u[i] - pos0[i], name=f"dev_pos_{i}_plus")
     m.addConstr(d[i] >= pos0[i] - u[i], name=f"dev_pos_{i}_minus")
@@ -160,20 +291,20 @@ for i in N:
 # -------------------------------------------------
 # One slack per consecutive cluster-pair (k1 -> k2), but we still enforce it for all (i,j) pairs.
 # This avoids dozens of slack variables while keeping the semantics: violations are allowed but penalized.
-s = {}           # s[k1,k2] >= 0
+s_cluster = {}           # s_cluster[k1,k2] >= 0
 pair_constraints = []  # keep for debugging / warm-start slack init
 
 for k1, k2 in zip(ordered_cluster_keys[:-1], ordered_cluster_keys[1:]):
     C_prev = cluster_order[k1]
     C_next = cluster_order[k2]
 
-    s[k1, k2] = m.addVar(lb=0.0, vtype=GRB.CONTINUOUS, name=f"s_cluster_{k1}_{k2}")
+    s_cluster[k1, k2] = m.addVar(lb=0.0, vtype=GRB.CONTINUOUS, name=f"s_cluster_{k1}_{k2}")
 
     for i in C_prev:
         for j in C_next:
             if i in u and j in u:
-                # u[i] + 1 <= u[j] + s[k1,k2]
-                constr = m.addConstr(u[i] + 1 <= u[j] + s[k1, k2],
+                # u[i] + 1 <= u[j] + s_cluster[k1,k2]
+                constr = m.addConstr(u[i] + 1 <= u[j] + s_cluster[k1, k2],
                                      name=f"cluster_{k1}_{k2}_{i}_{j}")
                 pair_constraints.append((k1, k2, i, j, constr))
 
@@ -182,14 +313,16 @@ m.update()
 # -------------------------------------------------
 # OBJECTIVE
 # -------------------------------------------------
-lam = 0.1                 # weight for staying close to initial order
-CLUSTER_PENALTY = 50.0     # make this bigger if you want cluster order to dominate
+lam = 1                 # weight for staying close to initial order
+RAW_PENALTY = 10.0      # weight for cluster order
+CLUSTER_PENALTY = 10.0  # weight for raw order
 
 travel_cost = gp.quicksum(c[i, j] * x[i, j] for (i, j) in x)
 soft_penalty = lam * gp.quicksum(d[i] for i in N)
-cluster_penalty = CLUSTER_PENALTY * gp.quicksum(s.values())
+cluster_penalty = CLUSTER_PENALTY * gp.quicksum(s_cluster.values())
+raw_penalty = RAW_PENALTY * gp.quicksum(s_raw.values())
 
-m.setObjective(travel_cost + soft_penalty + cluster_penalty, GRB.MINIMIZE)
+m.setObjective(travel_cost + soft_penalty + cluster_penalty + raw_penalty, GRB.MINIMIZE)
 
 # -------------------------------------------------
 # WARM START
@@ -208,19 +341,25 @@ for i in N:
     d[i].start = 0.0
 
 # slack starts: compute maximum violation in the warm start for each cluster pair
-# s[k1,k2] >= max_{i in Cprev, j in Cnext} (pos0[i] + 1 - pos0[j], 0)
-for k1, k2 in s:
+# s_cluster[k1,k2] >= max_{i in Cprev, j in Cnext} (pos0[i] + 1 - pos0[j], 0)
+for k1, k2 in s_cluster:
     worst = 0.0
     for i in cluster_order[k1]:
         for j in cluster_order[k2]:
             if i in pos0 and j in pos0:
                 worst = max(worst, pos0[i] + 1 - pos0[j])
-    s[k1, k2].start = max(0.0, float(worst))
+    s_cluster[k1, k2].start = max(0.0, float(worst))
+
+for i, j in s_raw:
+    worst = 0.0
+    if i in pos0 and j in pos0:
+        worst = max(worst, pos0[i] + 1 - pos0[j])
+    s_raw[i, j].start = max(0.0, float(worst))
 
 # -------------------------------------------------
 # SOLVE
 # -------------------------------------------------
-m.setParam("TimeLimit", 30)
+m.setParam("TimeLimit", 10)
 #m.setParam("MIPGap", 0.02)
 #m.setParam("MIPFocus", 1)   # focus on finding incumbents
 #m.setParam("Heuristics", 0.2)
@@ -232,7 +371,7 @@ m.setParam("Heuristics", 0.5)  # more aggressive incumbents
 # --- DEBUG: evaluate warm-start cluster violations (based on u.start = pos0) ---
 print("\n[Warm start check] cluster violations implied by pos0 order:")
 
-for k1, k2 in s:
+for k1, k2 in s_cluster:
     worst = 0
     worst_pair = None
     for i in cluster_order[k1]:
@@ -249,33 +388,63 @@ for k1, k2 in s:
         print(f"  pair {k1}->{k2}: no violation")
 
 print("\n[Warm start] slack starts:")
-for (k1, k2), var in s.items():
+for (k1, k2), var in s_cluster.items():
     print(f"  s_cluster[{k1}->{k2}].start = {var.start}")
 
 
 m.optimize()
 
 # -------------------------------------------------
+# DEBUG & ANALYSIS
+# -------------------------------------------------
+
+# 1. Objective breakdown (who pays and what)
+debug_objective_components(
+    m,
+    travel_cost,
+    soft_penalty,
+    cluster_penalty,
+    raw_penalty
+)
+
+# 2. Soft constraint violations (cluster + raw)
+debug_soft_constraints(
+    u,
+    s_cluster=s_cluster,
+    s_raw=s_raw,
+    pos0=pos0
+)
+
+# 3. Slack repair analysis (warm start → final)
+compare_slack_start_vs_final(
+    s_cluster=s_cluster,
+    s_raw=s_raw
+)
+
+# 4. Positional shift visualization (ASCII)
+ascii_shift_plot(
+    u=u,
+    pos0=pos0,
+    width=80,
+    clusters=cluster_order
+)
+
+# -------------------------------------------------
 # REPORT
 # -------------------------------------------------
-print("\nObjective value:", m.ObjVal)
-print("Travel cost:", travel_cost.getValue())
-print("Soft penalty:", soft_penalty.getValue())
-print("Cluster penalty:", cluster_penalty.getValue())
-
 print("\nSlack variables (cluster order violations):")
-for (k1, k2), var in s.items():
+for (k1, k2), var in s_cluster.items():
     if var.X > 1e-6:
         print(f"s_cluster[{k1}->{k2}] = {var.X:.3f}")
 
 print("\nOptimal tour edges:")
 for (i, j), var in x.items():
     if var.X > 0.5:
-        print(f"{i} -> {j}")
+        print(f"{short(i)} -> {short(j)}")
 
 print("\nPositions (u):")
 for i in N:
-    print(i, u[i].X)
+    print(short(i), u[i].X)
 
 # -------------------------------------------------
 # BUILD ROUTE FROM SOLUTION
