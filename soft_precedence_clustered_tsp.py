@@ -2,6 +2,8 @@ import gurobipy as gp
 from gurobipy import GRB
 import json
 import math
+import metrics
+import helpers
 
 def short(x):
     if isinstance(x, str):
@@ -178,6 +180,29 @@ def print_route_table(route, unified_steps_path="unified_steps.json"):
 
     return pd.DataFrame([{"u": u, "uuid": uid, "description": d} for u, uid, d in rows])
 
+def evaluate_against_ground_truth(pred_path, gt_path):
+    pred = helpers.load_uuid_sequence(pred_path)
+    gt = helpers.load_uuid_sequence(gt_path)
+
+    kt, sp = metrics.rank_correlations(pred, gt)
+    ed, ops = metrics.edit_distance(pred, gt)
+    lcs = metrics.lcs_length(pred, gt)
+
+    print("\n=== GLOBAL METRICS ===")
+    print(f"Kendall τ   : {kt:.3f}")
+    print(f"Spearman ρ : {sp:.3f}")
+    print(f"Edit dist  : {ed:.3f}")
+    print(f"LCS length : {lcs}/{len(gt)}")
+
+    metrics.print_comparison(pred, gt)
+
+    return {
+        "kendall_tau": kt,
+        "spearman": sp,
+        "edit_distance": ed,
+        "lcs": lcs,
+        "ops": ops
+    }
 
 # -------------------------------------------------
 # DATA
@@ -465,3 +490,20 @@ while True:
 
 print_route_table(route, unified_steps_path="unified_steps.json")
 
+# -------------------------------------------------
+# WRITE THE SOLUTION
+# -------------------------------------------------
+helpers.write_solver_output(
+    route,
+    unified_steps_path="unified_steps.json",
+    output_path="solver_output.json",
+    depot=depot
+)
+
+# -------------------------------------------------
+# EVALUATE THE SOLUTION
+# -------------------------------------------------
+evaluate_against_ground_truth(
+    pred_path="solver_output.json",
+    gt_path="sample_steps_gt.json"
+)

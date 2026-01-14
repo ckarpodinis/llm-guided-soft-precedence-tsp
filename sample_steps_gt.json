@@ -1,0 +1,60 @@
+[
+  { "uuid": "b54bf45f-2a75-c864-c050-200710f8c189", "step": { "action": "transfer", "target": "Erlenmeyer flask #0", "from": null, "to": "bench" }
+  },
+  { "uuid": "cf4a006c-3ffd-a552-f62e-dafbd48d296b", "step": { "action": "open", "target": { "type": "container", "id": "container.ddh2o" }, "component": "cap" }
+  },
+  { "uuid": "95b51243-9aa9-1fbc-ef22-813467386422", "step": { "action": "transfer", "target": { "type": "chemical", "id": "chemical.ddh2o", "name": "double-distilled water" }, "amount": 100, "unit": "mL", "from": { "type": "container", "id": "container.ddh2o", "name": "double-distilled water" }, "to": { "type": "tool", "id": "tool.erlenmeyer_flask.0", "name": "Erlenmeyer flask #0" } }
+  },
+  { "uuid": "47b449ab-b02a-81f0-217e-a3054497199c", "step": { "action": "close", "target": { "type": "container", "id": "container.ddh2o" }, "component": "cap" }
+  },
+  { "uuid": "f0e16e10-b9c3-a525-d869-31a6b4646166", "step": { "action": "set", "target": { "type": "instrument", "id": "instrument.electronic_scale" }, "property": "power", "value": "on" }
+  },
+  { "uuid": "0cde32bc-95c2-9dd3-d5d5-f2b78aa2dd0c", "step": { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.0", "name": "aluminium foil #0" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } }
+  },
+  { "uuid": "91659360-dc37-ba91-1e1f-cecb57419fdf", "step": { "action": "open", "target": { "type": "container", "id": "container.cuso4" }, "component": "cap" }
+  },
+  { "uuid": "b24eae4f-6f3a-dbfe-c4db-b59d5f286485", "step": { "action": "transfer", "target": { "type": "chemical", "id": "chemical.cuso4", "name": "copper(II) sulfate pentahydrate" }, "amount": 5, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.0", "name": "spoon #0" }, "from": { "type": "container", "id": "container.cuso4", "name": "copper(II) sulfate pentahydrate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.0", "name": "aluminium foil #0" } }
+  },
+  { "uuid": "7c02710e-df26-39d6-1d81-cd11702ca1d8", "step": { "action": "transfer", "target": "aluminium foil #0 (with copper(II) sulfate pentahydrate)", "from": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" }, "to": "bench" }
+  },
+  { "uuid": "91f36f3a-84c7-e265-4bae-1aba5fde06ed", "step": { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.2", "name": "aluminium foil #2" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } }
+  },
+  { "uuid": "64750e57-fb36-39b9-9f9c-1144af93b316", "step": { "action": "transfer", "target": { "type": "chemical", "id": "chemical.cuso4", "name": "copper(II) sulfate pentahydrate" }, "amount": 5, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.0", "name": "spoon #0" }, "from": { "type": "container", "id": "container.cuso4", "name": "copper(II) sulfate pentahydrate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.2", "name": "aluminium foil #2" } }
+  },
+  { "uuid": "99ef758e-8f6f-a9c9-1e94-b4782910d0f8", "step": { "action": "close", "target": { "type": "container", "id": "container.cuso4" }, "component": "cap" }
+  },
+  { "uuid": "531a1fd1-cc33-1b06-b3cb-e63e714e4574", "step": { "action": "transfer", "target": { "type": "consumable", "id": "consumable.aluminium_foil.1", "name": "aluminium foil #1" }, "from": null, "to": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" } }
+  },
+  { "uuid": "3c489084-c9be-4168-084a-6f402713fb71", "step": { "action": "open", "target": { "type": "container", "id": "container.nahco3" }, "component": "cap" }
+  },
+  { "uuid": "664a99ff-45a1-9a9c-ff3b-c7f0c13030ce", "step": { "action": "transfer", "target": { "type": "chemical", "id": "chemical.nahco3", "name": "sodium bicarbonate" }, "amount": 3.4, "unit": "g", "using": { "type": "tool", "id": "tool.spoon.1", "name": "spoon #1" }, "from": { "type": "container", "id": "container.nahco3", "name": "sodium bicarbonate" }, "to": { "type": "consumable", "id": "consumable.aluminium_foil.1", "name": "aluminium foil #1" } }
+  },
+  { "uuid": "d97be2dc-a572-0268-39d8-93c54e63ce19", "step": { "action": "close", "target": { "type": "container", "id": "container.nahco3" }, "component": "cap" }
+  },
+  { "uuid": "127cffe5-4c5a-3ffd-ca92-3eb03c902a5d", "step": { "action": "transfer", "target": "aluminium foil #1 (with sodium bicarbonate)", "from": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale weighting platform" }, "to": "bench" }
+  },
+  { "uuid": "fb2fd835-9da6-6480-1a97-64bc66159535", "step": { "action": "transfer", "target": "aluminium foil #0[copper(II) sulfate pentahydrate]", "from": "bench", "to": "Erlenmeyer flask #0" }
+  },
+  { "uuid": "b0352a80-f285-0aba-ee44-28d6c310c07e", "step": { "action": "transfer", "target": "aluminium foil #1[sodium bicarbonate]", "from": "bench", "to": "Erlenmeyer flask #0" }
+  },
+  { "uuid": "73215c34-da2f-7112-328e-0fe355f18ad9", "step": { "action": "transfer", "target": "Erlenmeyer flask #0", "from": "bench", "to": "stirring platform of magnetic stirrer" }
+  },
+  { "uuid": "ed6f0114-6774-cdaa-ef91-8cae89edf5fd", "step": { "action": "transfer", "target": "magnetic stir bar", "from": "bench", "to": "Erlenmeyer flask #0" }
+  },
+  { "uuid": "1341c461-37b5-181c-90b1-c5cb65e8a773", "step": { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "power", "value": "on" }
+  },
+  { "uuid": "5d3cd698-515c-43eb-6eee-560a25556388", "step": { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "RPM", "value": 5, "unit": "RPM" }
+  },
+  { "uuid": "05610f1b-44f7-f36f-4db2-0dead0294542", "step": { "action": "set", "target": { "type": "instrument", "id": "instrument.magnetic_stirrer", "name": "magnetic stirrer" }, "property": "power", "value": "off", "details": "after reaction is complete" }
+  },
+  { "uuid": "a4acef22-7b11-efbe-1a7a-8400d1eb32c8", "step": { "action": "transfer", "target": "magnetic stir bar", "using": { "type": "tool", "id": "tool.magnetic_stick", "name": "magnetic stick" }, "from": "Erlenmeyer flask #0", "to": "bench" }
+  },
+  { "uuid": "34648eb2-b04a-33bd-8cce-276ac39b1d81", "step": { "action": "transfer", "target": "magnetic stick", "from": null, "to": "bench" }
+  },
+  { "uuid": "5f06069b-c6d6-7610-6eea-6bdb6a242c14", "step": { "action": "transfer", "target": "aluminium foil #0", "from": "bench", "to": "waste bin" }
+  },
+  { "uuid": "07c70252-9e11-3f6d-c65e-8b33c29ca80b", "step": { "action": "transfer", "target": "aluminium foil #1", "from": "bench", "to": "waste bin" }
+  },
+  { "uuid": "d8eddbd9-e98f-081f-aeda-b507af9e8892", "step": { "action": "set", "target": { "type": "instrument", "id": "instrument.electronic_scale", "name": "electronic scale" }, "property": "power", "value": "off" }
+  }
+]
