@@ -51,15 +51,16 @@ def compare_slack_start_vs_final(s_cluster=None, s_raw=None):
     check("CLUSTER slacks", s_cluster)
     check("RAW slacks", s_raw)
 
-def debug_objective_components(m, travel_cost, soft_penalty,
+def debug_objective_components(m, travel_cost, position_penalty, edge_penalty,
                                cluster_penalty, raw_penalty):
     print("\n[DEBUG] Objective decomposition")
 
-    print(f"  Travel cost        : {travel_cost.getValue():.2f}")
-    print(f"  Deviation penalty  : {soft_penalty.getValue():.2f}")
-    print(f"  Cluster penalty    : {cluster_penalty.getValue():.2f}")
-    print(f"  Raw penaltly       : {raw_penalty.getValue():.2f}")
-    print(f"  TOTAL              : {m.ObjVal:.2f}")
+    print(f"  Travel cost       : {travel_cost.getValue():.2f}")
+    print(f"  Position penalty  : {position_penalty.getValue():.2f}")
+    print(f"  Edge penalty      : {edge_penalty.getValue():.2f}")
+    print(f"  Cluster penalty   : {cluster_penalty.getValue():.2f}")
+    print(f"  Raw penaltly      : {raw_penalty.getValue():.2f}")
+    print(f"  TOTAL             : {m.ObjVal:.2f}")
 
 def local_relative_displacement(i, pos0, u, k=2):
     """
@@ -180,21 +181,21 @@ def print_route_table(route, unified_steps_path="unified_steps.json"):
 
     return pd.DataFrame([{"u": u, "uuid": uid, "description": d} for u, uid, d in rows])
 
-def evaluate_against_ground_truth(pred_path, gt_path):
+def evaluate_prediction(pred_path, base_path):
     pred = helpers.load_uuid_sequence(pred_path)
-    gt = helpers.load_uuid_sequence(gt_path)
+    base = helpers.load_uuid_sequence(base_path)
 
-    kt, sp = metrics.rank_correlations(pred, gt)
-    ed, ops = metrics.edit_distance(pred, gt)
-    lcs = metrics.lcs_length(pred, gt)
+    kt, sp = metrics.rank_correlations(pred, base)
+    ed, ops = metrics.edit_distance(pred, base)
+    lcs = metrics.lcs_length(pred, base)
 
     print("\n=== GLOBAL METRICS ===")
     print(f"Kendall τ   : {kt:.3f}")
     print(f"Spearman ρ : {sp:.3f}")
     print(f"Edit dist  : {ed:.3f}")
-    print(f"LCS length : {lcs}/{len(gt)}")
+    print(f"LCS length : {lcs}/{len(base)}")
 
-    metrics.print_comparison(pred, gt)
+    metrics.print_comparison(pred, base)
 
     return {
         "kendall_tau": kt,
@@ -257,6 +258,7 @@ for c in raw_constraints:
 # Initial tour (UUID-based)
 initial_tour = [depot] + nodes + [depot]
 pos0 = {node: idx for idx, node in enumerate(initial_tour) if node in N}
+x0 = {(i, j): 1 for (i, j) in zip(initial_tour, initial_tour[1:])}
 
 # -------------------------------------------------
 # COST MATRIX (uniform for now)
@@ -338,16 +340,18 @@ m.update()
 # -------------------------------------------------
 # OBJECTIVE
 # -------------------------------------------------
-lam = 1                 # weight for staying close to initial order
-RAW_PENALTY = 10.0      # weight for cluster order
-CLUSTER_PENALTY = 10.0  # weight for raw order
+pos_lambda = 2         # weight for staying close to initial order (retain position)
+edge_lambda = 1        # weight for staying close to initial order (retain edges)
+raw_lambda = 10.0      # weight for cluster order
+cluster_lambda = 10.0  # weight for raw order
 
 travel_cost = gp.quicksum(c[i, j] * x[i, j] for (i, j) in x)
-soft_penalty = lam * gp.quicksum(d[i] for i in N)
-cluster_penalty = CLUSTER_PENALTY * gp.quicksum(s_cluster.values())
-raw_penalty = RAW_PENALTY * gp.quicksum(s_raw.values())
+position_penalty = pos_lambda * gp.quicksum(d[i] for i in N)
+edge_penalty = edge_lambda * gp.quicksum(1 - x[i,j] for (i, j) in x0)
+cluster_penalty = cluster_lambda * gp.quicksum(s_cluster.values())
+raw_penalty = raw_lambda * gp.quicksum(s_raw.values())
 
-m.setObjective(travel_cost + soft_penalty + cluster_penalty + raw_penalty, GRB.MINIMIZE)
+m.setObjective(travel_cost + position_penalty + edge_penalty + cluster_penalty + raw_penalty, GRB.MINIMIZE)
 
 # -------------------------------------------------
 # WARM START
@@ -427,7 +431,8 @@ m.optimize()
 debug_objective_components(
     m,
     travel_cost,
-    soft_penalty,
+    position_penalty,
+    edge_penalty,
     cluster_penalty,
     raw_penalty
 )
@@ -503,7 +508,12 @@ helpers.write_solver_output(
 # -------------------------------------------------
 # EVALUATE THE SOLUTION
 # -------------------------------------------------
-evaluate_against_ground_truth(
+evaluate_prediction(
     pred_path="solver_output.json",
-    gt_path="sample_steps_gt.json"
+    base_path="sample_steps_gt.json"
+)
+
+evaluate_prediction(
+    pred_path="solver_output.json",
+    base_path="unified_steps.json"
 )
