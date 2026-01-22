@@ -72,6 +72,67 @@ def lcs_length(a, b):
                 dp[i+1][j+1] = max(dp[i][j+1], dp[i+1][j])
     return dp[-1][-1]
 
+def local_relative_displacement_pos(i, pos_ref, u_pos, k=2):
+    """
+    Counts how many local neighbor orderings of i were inverted.
+    k = window size on each side
+    """
+    p0 = pos_ref[i]
+    ui = u_pos[i]
+
+    neighbors = [
+        j for j in pos_ref
+        if j != i and abs(pos_ref[j] - p0) <= k
+    ]
+
+    inv = 0
+    for j in neighbors:
+        if (p0 - pos_ref[j]) * (ui - u_pos[j]) < 0:
+            inv += 1
+
+    return inv
+
+
+def displacement(u_pos, pos_ref, k=2, clusters=None):
+    deltas = {}
+    deltas_loc = {}
+
+    for i in pos_ref:
+        if i not in u_pos:
+            continue
+
+        Δ = u_pos[i] - pos_ref[i]
+        Δloc = local_relative_displacement_pos(i, pos_ref, u_pos, k)
+
+        deltas[i] = Δ
+        deltas_loc[i] = Δloc
+
+    abs_deltas = [abs(v) for v in deltas.values()]
+    loc_vals = list(deltas_loc.values())
+
+    metrics = {
+        "mean_abs_delta": sum(abs_deltas) / len(abs_deltas),
+        "max_abs_delta": max(abs_deltas),
+        "mean_delta_loc": sum(loc_vals) / len(loc_vals),
+        "max_delta_loc": max(loc_vals),
+        "frac_delta_loc_positive": sum(v > 0 for v in loc_vals) / len(loc_vals),
+        "local_stability": 1 - (sum(loc_vals) / len(loc_vals)) / (2*k), # 1 - mean_delta_loc / (2*k)
+    }
+
+    if clusters:
+        metrics["by_cluster"] = {}
+        for ck, C in clusters.items():
+            C = [i for i in C if i in deltas]
+            if not C:
+                continue
+            metrics["by_cluster"][ck] = {
+                "mean_abs_delta": sum(abs(deltas[i]) for i in C) / len(C),
+                "mean_delta_loc": sum(deltas_loc[i] for i in C) / len(C),
+            }
+
+    return metrics
+
+
 # Pretty comparison table
 def print_comparison(pred, gt):
     gt_pos = {u: i for i, u in enumerate(gt)}
