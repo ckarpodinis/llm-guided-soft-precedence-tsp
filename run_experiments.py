@@ -1,42 +1,73 @@
 import itertools
 import json
-import soft_precedence_clustered_tsp
+from soft_precedence_clustered_tsp import solver
+from logging_utils import experiment_logger
+from pathlib import Path
+from datetime import datetime
 
-#pos_lambdas = [0.5, 1, 2, 5]
-#edge_lambdas = [0, 0.5, 1]
-#cluster_lambdas = [1, 5, 10]
-#raw_lambdas = [5, 10]
-pos_lambdas = [2]
-edge_lambdas = [1]
-cluster_lambdas = [10]
-raw_lambdas = [10]
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
 
-experiments = itertools.product(
-    pos_lambdas,
-    edge_lambdas,
-    cluster_lambdas,
-    raw_lambdas
-)
+GRID = {
+    #"pos_lambda":     [0, 1, 2, 5],
+    #"edge_lambda":    [0, 1, 3],
+    #"cluster_lambda": [0, 1, 3, 10, 30],
+    #"raw_lambda":     [0, 1, 10],
+    "pos_lambda":     [1, 2],
+    "edge_lambda":    [1, 2],
+    "cluster_lambda": [10, 20],
+    "raw_lambda":     [10],
+}
 
-results = []
+grid_results = []
 
-for idx, (pl, el, cl, rl) in enumerate(experiments):
-    print(f"Running exp {idx}: "
-          f"pos={pl}, edge={el}, cluster={cl}, raw={rl}")
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
 
-    res = soft_precedence_clustered_tsp.solver(
-        pos_lambda=pl,
-        edge_lambda=el,
-        cluster_lambda=cl,
-        raw_lambda=rl,
-        time_limit=10,
-        heuristics=0.5,
-        mipfocus=0,
-        tag=f"exp_{idx}"
-    )
+results_dir = Path("results")
+results_dir.mkdir(exist_ok=True)
 
-    results.append(res)
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-with open("experiment_results.json", "w") as f:
-    json.dump(results, f, indent=2)
+grid_combinations = list(itertools.product(
+    GRID["pos_lambda"],
+    GRID["edge_lambda"],
+    GRID["cluster_lambda"],
+    GRID["raw_lambda"]
+))
 
+total_experiments = len(grid_combinations)
+
+for idx, (pos, edge, cluster, raw) in enumerate(grid_combinations, start=1):
+    
+    tag = f"pos{pos}_edge{edge}_cl{cluster}_raw{raw}"
+    log_path = log_dir / f"{timestamp}_{tag}.log"
+
+    # console progress indicator
+    print(f"[{idx:3d}/{total_experiments}] Running {tag}")
+
+    with experiment_logger(log_path, also_print=False):
+        print("=" * 80)
+        print(f"Experiment: {tag}")
+        print("=" * 80)
+
+        res = solver(
+            pos_lambda=pos,
+            edge_lambda=edge,
+            cluster_lambda=cluster,
+            raw_lambda=raw,
+            time_limit=10,
+            heuristics=0.5,
+            mipfocus=0,
+            tag=tag
+        )
+
+    grid_results.append(res)
+
+# -------------------------------------------------
+# SAVE GRID RESULTS
+# -------------------------------------------------
+out_path = results_dir / f"grid_results_{timestamp}.json"
+
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(grid_results, f, indent=2)
