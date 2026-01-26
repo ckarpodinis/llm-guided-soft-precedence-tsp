@@ -168,7 +168,8 @@ def evaluate_solution(
     *,
     solution_pos=None,
     k=2,
-    clusters=None
+    clusters=None,
+    keep_ops=False
 ):
     sol = helpers.load_uuid_sequence(sol_path)
     ref = helpers.load_uuid_sequence(ref_path)
@@ -183,8 +184,10 @@ def evaluate_solution(
         "spearman": sp,
         "edit_distance": ed,
         "lcs": lcs,
-        "ops": ops,
     }
+
+    if keep_ops:
+        result["ops"] = ops
 
     # -------------------------------------------------
     # Displacement metrics (optional)
