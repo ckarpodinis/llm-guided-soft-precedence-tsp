@@ -71,7 +71,13 @@ plots.plot_ordering_quality(df, ref="initial")
 #plots.plot_ordering_quality(df)
 
 # --------------------------------------------------
-# FIGURE C — Displacement
+# FIGURE C — Permutation
+# --------------------------------------------------
+plots.plot_permutation(df, ref="ground_truth")
+plots.plot_permutation(df, ref="initial")
+
+# --------------------------------------------------
+# FIGURE D — Displacement
 # --------------------------------------------------
 plots.plot_displacement(df, ref="ground_truth")
 plots.plot_displacement(df, ref="initial")
@@ -88,7 +94,7 @@ for ax, lam in zip(axes_gt.flat, lambda_keys):
     )
     plt.colorbar(sc, ax=ax, label=lam)
 
-fig_gt.suptitle("Figure D — Global vs local displacement (vs ground truth)", fontsize=14)
+fig_gt.suptitle("Figure E — Global vs local displacement (vs ground truth)", fontsize=14)
 
 
 # ======================================================
@@ -102,7 +108,7 @@ for ax, lam in zip(axes_init.flat, lambda_keys):
     )
     plt.colorbar(sc, ax=ax, label=lam)
 
-fig_init.suptitle("Figure E — Global vs local displacement (vs initial)", fontsize=14)
+fig_init.suptitle("Figure F — Global vs local displacement (vs initial)", fontsize=14)
 
 
 # ======================================================
@@ -122,7 +128,7 @@ for ax in axes3.flat:
     plt.colorbar(sc, ax=ax, label="λ value")
 
 fig3.suptitle(
-    "Figure F — Ordering trade-off: improvement vs drift",
+    "Figure G — Ordering trade-off: improvement vs drift",
     fontsize=14
 )
 
@@ -131,4 +137,3 @@ fig3.suptitle(
 # Show all figures
 # ======================================================
 plt.show()
-

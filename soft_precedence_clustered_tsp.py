@@ -178,12 +178,25 @@ def evaluate_solution(
     kt, sp = metrics.rank_correlations(sol, ref)
     ed, ops = metrics.edit_distance(sol, ref)
     lcs = metrics.lcs_length(sol, ref)
+    spf = metrics.spearman_footrule(sol, ref)
+    nspf = metrics.spearman_footrule_normalized(sol, ref)
+    # Permutation metrics 
+    bigram = metrics.ngram_overlap(sol, ref, n=2)
+    trigram = metrics.ngram_overlap(sol, ref, n=3)
+    brps = metrics.num_breakpoints(sol, ref)
+    brr = metrics.adjacency_break_rate(sol, ref)
 
     result = {
         "kendall_tau": kt,
         "spearman": sp,
+        "spearmanf": spf,
+        "normalized_spearmanf": nspf,
         "edit_distance": ed,
         "lcs": lcs,
+        "bigram": bigram,
+        "trigram": trigram,
+        "breakpoints": brps,
+        "breakrate": brr,
     }
 
     if keep_ops:

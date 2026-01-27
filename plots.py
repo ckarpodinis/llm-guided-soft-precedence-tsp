@@ -18,7 +18,7 @@ def _add_hover(scatter, df, value_key):
             f"edge={row['params.edge_lambda']}, "
             f"cluster={row['params.cluster_lambda']}, "
             f"raw={row['params.raw_lambda']}\n"
-            f"{value_key}={sel.target[1]:.3f}"
+            f"{value_key.rsplit('.', 1)[-1]}={sel.target[1]:.3f}"
         )
 
 
@@ -125,8 +125,10 @@ def plot_global_vs_local_by_lambda(df, ax, lam_key, ref="ground_truth"):
 
     @cursor.connect("add")
     def on_add(sel):
+        i = sel.index
         row = df.iloc[sel.index]
         sel.annotation.set_text(
+            f"exp={i}\n"
             f"pos={row['params.pos_lambda']}\n"
             f"edge={row['params.edge_lambda']}\n"
             f"cluster={row['params.cluster_lambda']}\n"
@@ -139,9 +141,6 @@ def plot_global_vs_local_by_lambda(df, ax, lam_key, ref="ground_truth"):
 
 # --------------------------------------------------
 # Ordering trade-off
-# --------------------------------------------------
-# --------------------------------------------------
-# Ordering trade-off (with hover)
 # --------------------------------------------------
 def plot_ordering_tradeoff_by_lambda(df, ax, lam_key):
     x = df["metrics.vs_initial.kendall_tau"]
@@ -254,7 +253,7 @@ def plot_ordering_quality(df, ref):
     metrics = [
         ("kendall_tau", "Kendall τ"),
         ("spearman", "Spearman ρ"),
-        ("edit_distance", "Edit distance"),
+        ("normalized_spearmanf", "Normalized Spearman F"),
         ("lcs", "LCS length"),
     ]
 
@@ -318,7 +317,7 @@ def plot_displacement(df, ref):
         ax.set_title(label)
 
     fig.suptitle(
-        f"Figure C — Displacement vs {ref.replace('_', ' ')}",
+        f"Figure D — Displacement vs {ref.replace('_', ' ')}",
         fontsize=14
     )
     return fig
@@ -351,3 +350,26 @@ def plot_displacement(df, ref):
 #    )
 #    return fig
 
+def plot_permutation(df, ref):
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10), constrained_layout=True)
+
+    prefix = f"metrics.vs_{ref}"
+
+    metrics = [
+        ("bigram", "bi-gram Overlap"),
+        ("trigram", "tri-gram Overlap"),
+        ("breakpoints", "Breakpoints"),
+        ("breakrate", "Adjacency Break Rate"),
+    ]
+
+    for ax, (key, label) in zip(axes.flat, metrics):
+        _plot_series(
+            ax, df, f"{prefix}.{key}", label
+        )
+        ax.set_title(label)
+
+    fig.suptitle(
+        f"Figure C — Permutations vs {ref.replace('_', ' ')}",
+        fontsize=14
+    )
+    return fig
