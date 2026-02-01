@@ -140,7 +140,7 @@ def plot_global_vs_local_by_lambda(df, ax, lam_key, ref="ground_truth"):
     return sc
 
 # --------------------------------------------------
-# Ordering trade-off
+# Ordering trade-off (for kendall tau only)
 # --------------------------------------------------
 def plot_ordering_tradeoff_by_lambda(df, ax, lam_key):
     x = df["metrics.vs_initial.kendall_tau"]
@@ -200,6 +200,79 @@ def plot_ordering_tradeoff_by_lambda(df, ax, lam_key):
             f"raw={row['params.raw_lambda']}\n\n"
             f"τ(initial)={row['metrics.vs_initial.kendall_tau']:.3f}\n"
             f"τ(GT)={row['metrics.vs_ground_truth.kendall_tau']:.3f}"
+        )
+
+    return sc
+
+# --------------------------------------------------
+# Ordering trade-off (generic metric)
+# --------------------------------------------------
+def plot_ordering_tradeoff(
+    df,
+    ax,
+    metric_key,
+    *,
+    title=None,
+    cmap="plasma"
+):
+    """
+    Plot ordering trade-off for a given metric.
+
+    x-axis: metric vs initial
+    y-axis: metric vs ground truth
+
+    Parameters
+    ----------
+    metric_key : str
+        e.g. "kendall_tau", "lcs", "bigram", "trigram",
+             "breakpoints", "breakrate", "normalized_spearmanf"
+    """
+
+    x_col = f"metrics.vs_initial.{metric_key}"
+    y_col = f"metrics.vs_ground_truth.{metric_key}"
+
+    if x_col not in df or y_col not in df:
+        raise KeyError(f"Metric '{metric_key}' not found in DataFrame")
+
+    x = df[x_col]
+    y = df[y_col]
+
+    # scatter
+    sc = ax.scatter(
+        x,
+        y,
+        alpha=0.75,
+        s=90,
+        edgecolor="black",
+    )
+
+    # Optional diagonal reference (only meaningful for bounded similarity metrics)
+    if x.min() >= 0 and x.max() <= 1 and y.min() >= 0 and y.max() <= 1:
+        ax.plot([0, 1], [0, 1], linestyle="--", color="black", linewidth=1)
+
+    ax.set_xlabel(f"{metric_key} vs initial")
+    ax.set_ylabel(f"{metric_key} vs ground truth")
+    ax.set_title(title or f"Ordering trade-off — {metric_key}")
+    ax.grid(True)
+
+    # --------------------------------------------------
+    # Interactive hover
+    # --------------------------------------------------
+    cursor = mplcursors.cursor(sc, hover=True)
+
+    @cursor.connect("add")
+    def on_add(sel):
+        i = sel.index
+        row = df.iloc[i]
+
+        sel.annotation.set_text(
+            f"exp={i}\n"
+            f"pos={row['params.pos_lambda']}, "
+            f"edge={row['params.edge_lambda']}, "
+            f"cluster={row['params.cluster_lambda']}, "
+            f"raw={row['params.raw_lambda']}\n\n"
+            f"{metric_key} (initial)={row[x_col]:.3f}\n"
+            f"{metric_key} (GT)={row[y_col]:.3f}"
         )
 
     return sc

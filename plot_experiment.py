@@ -43,7 +43,9 @@ print(f"[OK] Loaded {len(data)} experiments from {args.results_json}")
 df = pd.json_normalize(data)
 
 if args.feasible_only is True:
-    df = df[(df["slacks.cluster.sum"] <= 1e-9) & (df["slacks.raw.sum"] <= 1e-9)]
+    feasible = (df["slacks.cluster.sum"] <= 1e-9) & (df["slacks.raw.sum"] <= 1e-9)
+    print(f"Excluded {len(df)-len(df[feasible])} infeasible experiment")
+    df = df[feasible]
 
 
 # ======================================================
@@ -115,17 +117,20 @@ fig_init.suptitle("Figure F — Global vs local displacement (vs initial)", font
 # FIGURE 3 — Ordering trade-off (sensitivity)
 # ======================================================
 fig3, axes3 = plt.subplots(
-    2, 2, figsize=(14, 12), constrained_layout=True
+    3, 2, figsize=(14, 14), constrained_layout=True
 )
 
-for ax, lam in zip(axes3.flat, lambda_keys):
-    sc = plots.plot_ordering_tradeoff_by_lambda(
-        df, ax, lam_key=lam
-    )
+metrics = [
+    ("kendall_tau", "Kendall τ"),
+    ("normalized_spearmanf", "Normalized Spearman F"),
+    ("bigram", "Bigram overlap"),
+    ("trigram", "Trigram overlap"),
+    ("breakrate", "Break rate"),
+    ("lcs", "LCS Lenght"),
+]
 
-for ax in axes3.flat:
-    sc = ax.collections[0]
-    plt.colorbar(sc, ax=ax, label="λ value")
+for ax, (key, label) in zip(axes3.flat, metrics):
+    sc = plots.plot_ordering_tradeoff(df, ax, key)
 
 fig3.suptitle(
     "Figure G — Ordering trade-off: improvement vs drift",

@@ -10,14 +10,14 @@ GRID = {
     #"edge_lambda":    [0, 1, 3],
     #"cluster_lambda": [0, 1, 3, 10, 30],
     #"raw_lambda":     [0, 1, 10],
-    #"pos_lambda":     [0.1, 0.5, 1, 2, 5],
-    #"edge_lambda":    [0.1, 0.5, 1, 2, 5],
-    #"cluster_lambda": [0.1, 1, 5, 10, 20],
-    #"raw_lambda":     [0.1, 1, 5, 10, 20],
-    "pos_lambda":     [0.1, 0.2, 0.5, 0.8, 1, 1.2, 1.5, 2, 3, 5, 10],
-    "edge_lambda":    [1],
-    "cluster_lambda": [10],
-    "raw_lambda":     [10],
+    "pos_lambda":     [0.1, 0.5, 0.8, 1, 2, 5],
+    "edge_lambda":    [0.1, 0.5, 0.8, 1, 2, 5],
+    "cluster_lambda": [0.1, 1, 2, 5, 10, 20],
+    "raw_lambda":     [0.1, 1, 2, 5, 10, 20],
+    #"pos_lambda":     [0.1, 0.2, 0.5, 0.8, 1, 1.2, 1.5, 2, 3, 5, 10],
+    #"edge_lambda":    [1],
+    #"cluster_lambda": [10],
+    #"raw_lambda":     [10],
 }
 
 grid_results = []
