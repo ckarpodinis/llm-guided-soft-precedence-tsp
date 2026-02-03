@@ -88,30 +88,15 @@ plots.plot_displacement(df, ref="initial")
 # ======================================================
 # FIGURE 2a — Global vs local (vs GT)
 # ======================================================
-fig_gt, axes_gt = plt.subplots(2, 2, figsize=(14, 12), constrained_layout=True)
+fig2, axes2 = plt.subplots(3, 2, figsize=(14, 12), constrained_layout=True)
+    
+plots.plot_global_vs_local(df, axes2.flat[0], ref="ground_truth")
+plots.plot_global_vs_local(df, axes2.flat[1], ref="initial")
+plots.plot_ordering_tradeoff(df, axes2.flat[2], "displacement.mean_abs_delta")
+plots.plot_ordering_tradeoff(df, axes2.flat[3], "displacement.mean_delta_loc")
+plots.plot_ordering_tradeoff(df, axes2.flat[4], "displacement.local_stability")
 
-for ax, lam in zip(axes_gt.flat, lambda_keys):
-    sc = plots.plot_global_vs_local_by_lambda(
-        df, ax, lam_key=lam, ref="ground_truth"
-    )
-    plt.colorbar(sc, ax=ax, label=lam)
-
-fig_gt.suptitle("Figure E — Global vs local displacement (vs ground truth)", fontsize=14)
-
-
-# ======================================================
-# FIGURE 2b — Global vs local (vs initial)
-# ======================================================
-fig_init, axes_init = plt.subplots(2, 2, figsize=(14, 12), constrained_layout=True)
-
-for ax, lam in zip(axes_init.flat, lambda_keys):
-    sc = plots.plot_global_vs_local_by_lambda(
-        df, ax, lam_key=lam, ref="initial"
-    )
-    plt.colorbar(sc, ax=ax, label=lam)
-
-fig_init.suptitle("Figure F — Global vs local displacement (vs initial)", fontsize=14)
-
+fig2.suptitle("Figure E — Global vs local displacement", fontsize=14)
 
 # ======================================================
 # FIGURE 3 — Ordering trade-off (sensitivity)
@@ -133,7 +118,7 @@ for ax, (key, label) in zip(axes3.flat, metrics):
     sc = plots.plot_ordering_tradeoff(df, ax, key)
 
 fig3.suptitle(
-    "Figure G — Ordering trade-off: improvement vs drift",
+    "Figure F — Ordering trade-off: improvement vs drift",
     fontsize=14
 )
 
