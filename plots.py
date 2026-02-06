@@ -1,5 +1,12 @@
 import matplotlib.pyplot as plt
 import mplcursors
+import numpy as np
+
+# --------------------------------------------------
+# Helper: Add jitter to reveal hidden points
+# --------------------------------------------------
+def jitter(x, scale=0.01):
+    return x + np.random.uniform(-scale, scale, size=len(x))
 
 # --------------------------------------------------
 # Helper: experiment index + hover annotation
@@ -86,24 +93,21 @@ def _plot_dual_series(ax, df, ykey_gt, ykey_init, ylabel):
 # --------------------------------------------------
 # Global vs local displacement — structured + hover
 # --------------------------------------------------
-def plot_global_vs_local_by_lambda(df, ax, lam_key, ref="ground_truth"):
+def plot_global_vs_local(df, ax, ref="ground_truth"):
     x = df[f"metrics.vs_{ref}.displacement.mean_abs_delta"]
     y = df[f"metrics.vs_{ref}.displacement.mean_delta_loc"]
-    c = df[f"params.{lam_key}"]
 
     sc = ax.scatter(
-        x,
-        y,
-        c=c,
-        cmap="viridis",
+        jitter(x, scale=0.005),
+        jitter(y, scale=0.005),
         s=90,
         edgecolor="black",
-        alpha=0.85,
+        alpha=0.2,
     )
 
     ax.set_xlabel("Mean |Δ position|")
     ax.set_ylabel("Mean Δloc")
-    ax.set_title(f"{lam_key} (vs {'GT' if ref=='ground_truth' else 'initial'})")
+    ax.set_title(f"vs {'GT' if ref=='ground_truth' else 'initial'}")
     ax.grid(True)
 
 #    # -------- Structured annotation (static) --------
@@ -153,7 +157,7 @@ def plot_ordering_tradeoff_by_lambda(df, ax, lam_key):
         y,
         c=c,
         cmap="plasma",
-        alpha=0.75,
+        alpha=0.2,
         s=90,
         edgecolor="black",
     )
@@ -205,9 +209,9 @@ def plot_ordering_tradeoff_by_lambda(df, ax, lam_key):
     return sc
 
 # --------------------------------------------------
-# Ordering trade-off (generic metric)
+# Ordering trade-off (GT vs Initial)
 # --------------------------------------------------
-def plot_ordering_tradeoff(
+def plot_ordering_tradeoff_gt_vs_init(
     df,
     ax,
     metric_key,
@@ -239,20 +243,21 @@ def plot_ordering_tradeoff(
 
     # scatter
     sc = ax.scatter(
-        x,
-        y,
-        alpha=0.75,
+        jitter(x, scale=0.005),
+        jitter(y, scale=0.005),
+        alpha=0.2,
         s=90,
         edgecolor="black",
     )
 
     # Optional diagonal reference (only meaningful for bounded similarity metrics)
-    if x.min() >= 0 and x.max() <= 1 and y.min() >= 0 and y.max() <= 1:
-        ax.plot([0, 1], [0, 1], linestyle="--", color="black", linewidth=1)
+    #if x.min() >= 0 and x.max() <= 1 and y.min() >= 0 and y.max() <= 1:
+    #    ax.plot([0, 1], [0, 1], linestyle="--", color="black", linewidth=1)
+    ax.plot([min(x.min(), y.min()), max(x.max(), y.max())], [min(x.min(), y.min()), max(x.max(), y.max())], linestyle="--", color="black", linewidth=1)
 
-    ax.set_xlabel(f"{metric_key} vs initial")
-    ax.set_ylabel(f"{metric_key} vs ground truth")
-    ax.set_title(title or f"Ordering trade-off — {metric_key}")
+    ax.set_xlabel(f"{metric_key.split('.')[-1]} vs initial")
+    ax.set_ylabel(f"{metric_key.split('.')[-1]} vs ground truth")
+    ax.set_title(title or f"Ordering trade-off — {metric_key.split('.')[-1]}")
     ax.grid(True)
 
     # --------------------------------------------------
@@ -277,6 +282,76 @@ def plot_ordering_tradeoff(
 
     return sc
 
+# --------------------------------------------------
+# Ordering trade-off (generic)
+# --------------------------------------------------
+def plot_ordering_tradeoff_generic(
+    df,
+    ax,
+    metric1_key,
+    metric2_key,
+    *,
+    title=None,
+    cmap="plasma"
+):
+    """
+    Plot ordering trade-off for a given metrics.
+
+    x-axis: metric1
+    y-axis: metric2
+
+    Parameters
+    ----------
+    metric1_key : str
+    metric2_key : str
+        e.g. "kendall_tau", "lcs", "bigram", "trigram",
+             "breakpoints", "breakrate", "normalized_spearmanf"
+    """
+
+    x_col = f"metrics.{metric1_key}"
+    y_col = f"metrics.{metric2_key}"
+
+    if x_col not in df or y_col not in df:
+        raise KeyError(f"Metrics '{metric1_key}' or '{metric2_key}' not found in DataFrame")
+
+    x = df[x_col]
+    y = df[y_col]
+
+    # scatter
+    sc = ax.scatter(
+        jitter(x, scale=0.005),
+        jitter(y, scale=0.005),
+        alpha=0.2,
+        s=90,
+        edgecolor="black",
+    )
+
+    ax.set_xlabel(f"{metric1_key.split('.')[-1]}")
+    ax.set_ylabel(f"{metric2_key.split('.')[-1]}")
+    ax.set_title(title or f"Trade-off — {metric1_key.split('.')[-1]}, {metric2_key.split('.')[-1]}")
+    ax.grid(True)
+
+    # --------------------------------------------------
+    # Interactive hover
+    # --------------------------------------------------
+    cursor = mplcursors.cursor(sc, hover=True)
+
+    @cursor.connect("add")
+    def on_add(sel):
+        i = sel.index
+        row = df.iloc[i]
+
+        sel.annotation.set_text(
+            f"exp={i}\n"
+            f"pos={row['params.pos_lambda']}, "
+            f"edge={row['params.edge_lambda']}, "
+            f"cluster={row['params.cluster_lambda']}, "
+            f"raw={row['params.raw_lambda']}\n\n"
+            f"{metric1_key}={row[x_col]:.3f}\n"
+            f"{metric2_key}={row[y_col]:.3f}"
+        )
+
+    return sc
 
 def _plot_series(ax, df, ykey, ylabel):
     x = range(len(df))

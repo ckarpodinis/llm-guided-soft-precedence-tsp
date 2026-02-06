@@ -92,9 +92,10 @@ fig2, axes2 = plt.subplots(3, 2, figsize=(14, 12), constrained_layout=True)
     
 plots.plot_global_vs_local(df, axes2.flat[0], ref="ground_truth")
 plots.plot_global_vs_local(df, axes2.flat[1], ref="initial")
-plots.plot_ordering_tradeoff(df, axes2.flat[2], "displacement.mean_abs_delta")
-plots.plot_ordering_tradeoff(df, axes2.flat[3], "displacement.mean_delta_loc")
-plots.plot_ordering_tradeoff(df, axes2.flat[4], "displacement.local_stability")
+plots.plot_ordering_tradeoff_gt_vs_init(df, axes2.flat[2], "displacement.mean_abs_delta")
+plots.plot_ordering_tradeoff_gt_vs_init(df, axes2.flat[3], "displacement.mean_delta_loc")
+plots.plot_ordering_tradeoff_gt_vs_init(df, axes2.flat[4], "displacement.local_stability")
+plots.plot_ordering_tradeoff_generic(df, axes2.flat[5], "vs_ground_truth.displacement.mean_abs_delta", "vs_ground_truth.displacement.max_abs_delta")
 
 fig2.suptitle("Figure E — Global vs local displacement", fontsize=14)
 
@@ -115,7 +116,7 @@ metrics = [
 ]
 
 for ax, (key, label) in zip(axes3.flat, metrics):
-    sc = plots.plot_ordering_tradeoff(df, ax, key)
+    sc = plots.plot_ordering_tradeoff_gt_vs_init(df, ax, key)
 
 fig3.suptitle(
     "Figure F — Ordering trade-off: improvement vs drift",
